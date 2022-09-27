@@ -2,19 +2,30 @@
 
 using System;
 using System.Threading;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+/// <summary>
+/// Class of matrix
+/// </summary>
 public class Matrix
 {
     private int[,] matrix;
 
+    /// <summary>
+    /// The number of rows in matrix
+    /// </summary>
     public int Rows { get { return matrix.GetLength(0); } }
 
+    /// <summary>
+    /// The number of columns in matrix
+    /// </summary>
     public int Columns { get { return matrix.GetLength(1); } }
 
+    /// <summary>
+    /// The empty matrix constructor
+    /// </summary>
+    /// <param name="rows">The number of rows</param>
+    /// <param name="cols">The number of columns</param>
+    /// <exception cref="ArgumentException">Exception if matrix sizes are incorrect</exception>
     public Matrix(int rows, int cols)
     {
         if (rows <= 0 || cols <= 0)
@@ -24,6 +35,11 @@ public class Matrix
         matrix = new int[rows, cols];
     }
 
+    /// <summary>
+    /// Construct matrix by path to file
+    /// </summary>
+    /// <param name="path">Path to file with matrix</param>
+    /// <exception cref="ArgumentException">Exception if matrix sizes are incorrect</exception>
     public Matrix(string path)
     {
         using StreamReader file = new(path);
@@ -67,6 +83,11 @@ public class Matrix
         }
     }
 
+    /// <summary>
+    /// Checking correction of matrix sizes
+    /// </summary>
+    /// <param name="matrix">Given matrix</param>
+    /// <exception cref="ArgumentException">Exception if matrix sizes are incorrect</exception>
     private static void CheckCorrectionOfSizes(Matrix matrix)
     {
         if (matrix.Rows <= 0 || matrix.Columns <= 0)
@@ -75,6 +96,12 @@ public class Matrix
         }
     }
 
+    /// <summary>
+    /// Checking the correction in multiplication
+    /// </summary>
+    /// <param name="leftMatrix">Left matrix in multiplication</param>
+    /// <param name="rightMatrix">Right matrix in multiplication</param>
+    /// <exception cref="ArgumentException">Exception if matrix sizes are incorrect</exception>
     private static void CheckMultiplicationSize(Matrix leftMatrix, Matrix rightMatrix)
     {
         CheckCorrectionOfSizes(leftMatrix);
@@ -85,6 +112,12 @@ public class Matrix
         }
     }
 
+    /// <summary>
+    /// Sequential multiplication of matrices
+    /// </summary>
+    /// <param name="leftMatrix">Left matrix in multiplication</param>
+    /// <param name="rightMatrix">Right matrix in multiplication</param>
+    /// <returns>Multiplicated matrix</returns>
     public static Matrix SequentialMultiplication(Matrix leftMatrix, Matrix rightMatrix)
     {
         CheckMultiplicationSize(leftMatrix, rightMatrix);
@@ -102,6 +135,12 @@ public class Matrix
         return resultMartix;
     }
 
+    /// <summary>
+    /// Parallel multiplication of matrices
+    /// </summary>
+    /// <param name="leftMatrix">Left matrix in multiplication</param>
+    /// <param name="rightMatrix">Right matrix in multiplication</param>
+    /// <returns>Multiplicated matrix</returns>
     public static Matrix ParallelMultiplication(Matrix leftMatrix, Matrix rightMatrix)
     {
         CheckMultiplicationSize(leftMatrix, rightMatrix);
@@ -135,6 +174,12 @@ public class Matrix
         return resultMartix;
     }
 
+    /// <summary>
+    /// Checking if matrices are equal
+    /// </summary>
+    /// <param name="firstMatrix">First matrix</param>
+    /// <param name="secondMatrix">Second matrix</param>
+    /// <returns>The result of comparison</returns>
     public static bool AreEqual(Matrix firstMatrix, Matrix secondMatrix)
     {
         if (firstMatrix.Rows != secondMatrix.Rows || firstMatrix.Columns != secondMatrix.Columns)
@@ -154,6 +199,10 @@ public class Matrix
         return true;
     }
 
+    /// <summary>
+    /// Writes the matrix to file
+    /// </summary>
+    /// <param name="path">Path to file</param>
     public void WriteMatrix(string path)
     {
         using StreamWriter writer = new(path);
@@ -170,6 +219,13 @@ public class Matrix
 
     private static Random random = new();
 
+    /// <summary>
+    /// The random matrix constructor
+    /// </summary>
+    /// <param name="rows">The number of rows</param>
+    /// <param name="cols">The number of columns</param>
+    /// <returns>The random matrix</returns>
+    /// <exception cref="ArgumentException">Exception if matrix sizes are incorrect</exception>
     public static Matrix RandomMatrixCreate(int rows, int cols)
     {
         if (rows <= 0 || cols <= 0)
