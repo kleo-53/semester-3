@@ -1,22 +1,30 @@
 ﻿namespace ThreadPool;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+/// <summary>
+/// Class of the Task
+/// </summary>
+/// <typeparam name="TResult">Type of the result of function</typeparam>
 public class MyTask<TResult> : IMyTask<TResult>
 {
     private Func<TResult>? function;
     private MyThreadPool threadPool;
     private Exception? exception; 
     private TResult result;
-    public bool IsInterrupted;
+    private CancellationToken token;
+    private ManualResetEvent reset;
 
     public bool IsCompleted { get; private set; }
 
-    public MyTask(Func<TResult>? function, MyThreadPool threadPool)
+    /// <summary>
+    /// Constructor of the Task
+    /// </summary>
+    /// <param name="function">Given function</param>
+    /// <param name="threadPool">Thread pool, in which the program is running</param>
+    /// <param name="token">The token to check status of the threat</param>
+    /// <exception cref="ArgumentNullException">Exception if there are empty parametrs</exception>
+    public MyTask(Func<TResult>? function, MyThreadPool threadPool, CancellationToken token)
     {
         if (function == null || threadPool == null)
         {
@@ -24,8 +32,9 @@ public class MyTask<TResult> : IMyTask<TResult>
         }
         this.function = function;
         this.threadPool = threadPool;
-        IsCompleted = false;
-        IsInterrupted = false;
+        this.token = token;
+        IsCompleted = false; 
+        reset = new ManualResetEvent(false);
     }
 
     public TResult Result
@@ -34,20 +43,24 @@ public class MyTask<TResult> : IMyTask<TResult>
         {
             if (!IsCompleted)
             {
+                reset.WaitOne();
+                if (token.IsCancellationRequested)
+                {
+                    reset.Set();
+                    token.ThrowIfCancellationRequested();
+                }
                 if (exception != null)
                 {
                     throw new AggregateException(exception.Message);
                 }
-                if (IsInterrupted)
-                {
-                    function = null;
-                }
-                return result;
             }
             return result;
         }
     }
 
+    /// <summary>
+    /// Calculates the Task
+    /// </summary>
     public void Calculate()
     {
         try
@@ -55,16 +68,12 @@ public class MyTask<TResult> : IMyTask<TResult>
             result = function();
             IsCompleted = true;
             function = null;
+            reset.Set();
         }
         catch (Exception exception)
         {
             this.exception = exception;
         }
-    }
-
-    public void Interrupt()
-    {
-        IsInterrupted = true;
     }
 
     public IMyTask<TNewResult> ContinueWith<TNewResult>(Func<TResult, TNewResult> function)
@@ -73,7 +82,6 @@ public class MyTask<TResult> : IMyTask<TResult>
         {
             throw new ArgumentNullException();
         }
-
         return threadPool.Enqueue(() => function(Result));
     }
 }

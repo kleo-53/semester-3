@@ -2,105 +2,94 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+/// <summary>
+/// Class of the thread pool
+/// </summary>
 public class MyThreadPool
 {
-    public bool IsComplited { get; private set; }
-
-    private System.Threading.Thread[] threads;
+    private Thread[] threads;
     private readonly object locker = new();
-    private static volatile bool flag = true;
     private Queue<Action> queue;
+    private AutoResetEvent reset;
+    private CancellationTokenSource cancellationTokenSource;
+    private CancellationToken token;
 
-    public MyThreadPool(int count)
+    /// <summary>
+    /// Constructor of the ThreadPool
+    /// </summary>
+    /// <param name="quantity">The quantity of threads</param>
+    public MyThreadPool(int quantity)
     {
-        threads = new Thread[count];
+        threads = new Thread[quantity];
         queue = new Queue<Action>();
-        for (int i = 0; i < count; ++i)
+        reset = new AutoResetEvent(true);
+        cancellationTokenSource = new CancellationTokenSource();
+        token = cancellationTokenSource.Token;
+
+        for (int i = 0; i < quantity; ++i)
         {
             var localI = i;
             threads[i] = new Thread(() =>
             {
-                while (flag)
+                while (!token.IsCancellationRequested)
                 {
                     if (queue.TryDequeue(out var action))
                     {
                         action.Invoke();
                     }
+                    else
+                    {
+                        reset.WaitOne();
+                    }
                 }
             });
         }
+
         foreach (var thread in threads)
         {
             thread.Start();
         }
-        Console.ReadLine();
-        flag = false;
-        foreach (var thread in threads)
-        {
-            thread.Join();
-        }
     }
 
+    /// <summary>
+    /// Adds the function to the threads queue
+    /// </summary>
+    /// <typeparam name="TResult">Type of the result of function</typeparam>
+    /// <param name="function">Given function</param>
+    /// <returns>Added Task</returns>
+    /// <exception cref="AggregateException">Exception if thread was stopped</exception>
     public IMyTask<TResult> Enqueue<TResult>(Func<TResult> function)
     {
-        if (flag)
+        if (!cancellationTokenSource.IsCancellationRequested)
         {
             lock (locker)
             {
-                if (flag)
+                if (!cancellationTokenSource.IsCancellationRequested)
                 {
-                    var newTask = new MyTask<TResult>(function, this);
-
+                    var newTask = new MyTask<TResult>(function, this, token);
                     queue.Enqueue(newTask.Calculate);
-                    return new MyTask<TResult>(newTask);
+                    reset.Set();
+                    return newTask;
                 }
             }
         }
-        throw new InvalidOperationException("Pool is stopped");
+        throw new AggregateException("Thread was stopped");
     }
 
-    public void Interruption()
+    /// <summary>
+    /// Interrupts the thread pool
+    /// </summary>
+    public void Shutdown()
     {
-        flag = false;
         lock (locker)
         {
-            foreach (var threadItem in threads) // is it necessary ?
-            {
-                threadItem.Join();
-            }
+            cancellationTokenSource.Cancel();
         }
-    }
-
-    public static void Beginning(int n)
-    {
-        forks = new Object[n];
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < threads.Length; ++i)
         {
-            forks[i] = new Object();
+            reset.Set();
         }
-
-        var threads = new Thread[n];
-        for (int i = 0; i < n; ++i)
-        {
-            var localI = i;
-            threads[i] = new Thread(() =>
-            {
-                for (int j = localI; j < n; j += threads.Length)
-                {
-                    Philosopher(localI);
-                }
-            });
-        }
-        foreach (var thread in threads)
-        {
-            thread.Start();
-        }
-        Console.ReadLine();
-        flag = false;
         foreach (var thread in threads)
         {
             thread.Join();
