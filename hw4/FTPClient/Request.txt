@@ -1,0 +1,5 @@
+1 ../../../../FTPClient
+1 ../../../../FTP
+1 ../../../../FTPClient/Program.cs
+2 ../../../../FTPClient/FTPClient.csproj
+2 FTPServer.exe
