@@ -32,7 +32,7 @@ public class Client
     /// <summary>
     /// Starts client
     /// </summary>
-    public void Start()
+    public async void Start()
     {
         using StreamReader reader = new StreamReader(pathToFile);
         while (true)
@@ -47,6 +47,7 @@ public class Client
                 var stream = client.GetStream();
                 var writer = new StreamWriter(stream);
                 writer.WriteLine(line);
+                writer.Flush();
 
                 var streamReader = new StreamReader(stream);
                 var data = streamReader.ReadToEnd();

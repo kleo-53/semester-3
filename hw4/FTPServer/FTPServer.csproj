@@ -7,4 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="FTP.Tests">
+      <HintPath>..\FTP.Tests\obj\Debug\net6.0\FTP.Tests.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

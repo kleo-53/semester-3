@@ -11,6 +11,9 @@
     <Reference Include="FTP.Tests">
       <HintPath>..\FTP.Tests\obj\Debug\net6.0\FTP.Tests.dll</HintPath>
     </Reference>
+    <Reference Include="FTPServer">
+      <HintPath>..\FTPServer\obj\Debug\net6.0\FTPServer.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
