@@ -10,5 +10,9 @@ class Program
             var client = new Client(port, Path.GetFullPath(path), null);
             client.Start();
         }
+        else
+        {
+            throw new ArgumentException("Incorrect port.");
+        }
     }
 }
