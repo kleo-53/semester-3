@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Attributes\Attributes.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <ProjectReference Include="..\ExampleProject\ExampleProject.csproj" />
   </ItemGroup>
 
