@@ -54,7 +54,7 @@ public static class Comparison
             squareDeviationParallel -= mathExpectationParallel * mathExpectationParallel;
             squareDeviationSequental = Math.Sqrt(squareDeviationSequental);
             squareDeviationParallel = Math.Sqrt(squareDeviationParallel);
-            file.Write(i < 9000 ? $"|      {i / 100}      |     {i}x{i}    |         {mathExpectationSequental:f5} sec       |          {squareDeviationSequental:f5} sec         |" +
+            file.Write(i < 900 ? $"|      {i / 100}      |     {i}x{i}    |         {mathExpectationSequental:f5} sec       |          {squareDeviationSequental:f5} sec         |" +
                 $"       {mathExpectationParallel:f5} sec       |         {squareDeviationParallel:f5} sec         |" : $"|     {i / 100}    " +
                 $"  |    {i}x{i}   |        {mathExpectationSequental:f5} sec       |          {squareDeviationSequental:f5} sec         |" +
                 $"       {mathExpectationParallel:f5} sec       |         {squareDeviationParallel:f5} sec         |");
