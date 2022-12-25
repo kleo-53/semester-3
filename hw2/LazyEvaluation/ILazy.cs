@@ -6,8 +6,8 @@
 public interface ILazy<T>
 {
     /// <summary>
-    /// Lazy evaluation
+    /// Calculates functioon and returns the result
     /// </summary>
-    /// <returns>Result of the calculation</returns>
+    /// <returns>The result of calculation</returns>
     T? Get();
 }
