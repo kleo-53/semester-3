@@ -2,69 +2,104 @@
 
 using NUnit.Framework;
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 
+/// <summary>
+/// Class with ThreadPool tests
+/// </summary>
 public class MyThreadPoolTest
 {
     const int SIZE = 3;
-    private MyThreadPool threadPool;
-    private readonly object locker = new();
+    private MyThreadPool threadPool = new(SIZE);
+    private Thread[] threads = new Thread[SIZE];
+    private ManualResetEvent manualResetEvent = new(false);
+    private ConcurrentQueue<int> results = new();
 
     [SetUp]
     public void Setup()
     {
-        threadPool = new MyThreadPool(SIZE);
+        threadPool = new(SIZE);
+        threads = new Thread[SIZE];
+        results = new();
+        manualResetEvent = new(false);
+    }
+    [TearDown]
+    public void Teardown()
+    {
+        threadPool.Shutdown();
     }
 
     [Test]
     public void EnqueueFunctionTest()
     {
-        var tasks = new IMyTask<int>[5];
-        for (int i = 0; i < tasks.Length; ++i)
+        for (var i = 0; i < SIZE; ++i)
         {
             var localI = i;
-            tasks[localI] = threadPool.Enqueue(() => localI * localI + localI);
-            Assert.AreEqual(localI * localI + localI, tasks[localI].Result);
+            threads[localI] = new Thread(() => results.Enqueue(threadPool.Enqueue(() => localI * localI + localI).Result));
         }
-        threadPool.Shutdown();
-    }
-
-    [Test]
-    public void ThreadPoolSizeTest()
-    {
-        var tasks = new IMyTask<int>[SIZE];
-        var size = 0;
-
-        for (int i = 0; i < tasks.Length; ++i)
+        foreach (var thread in threads)
         {
-            var localI = i;
-            tasks[localI] = threadPool.Enqueue(() =>
-            {
-                lock (locker)
-                {
-                    ++size;
-                    return localI;
-                }
-            });
+            thread.Start();
         }
-        for (int i = 0; i < tasks.Length; ++i)
+        foreach (var thread in threads)
         {
-            if (i != tasks[i].Result)
+            if (!thread.Join(100))
             {
-                Assert.Fail();
+                Assert.Fail("Deadlock");
             }
         }
-        Assert.AreEqual(SIZE, size); 
-        threadPool.Shutdown(); 
+        var a = 0;
+        foreach (var result in results)
+        {
+            Assert.AreEqual(a * a + a, result);
+            a++;
+        }
     }
 
     [Test]
-    public void AddingAfterAfterShutdownThrowsExceptionTest()
+    public void ThreadSafetyTest()
+    {
+        var task = threadPool.Enqueue(() =>
+        {
+            manualResetEvent.WaitOne();
+            return 1;
+        });
+
+        for (var i = 0; i < SIZE; ++i)
+        {
+            var localI = i;
+            threads[localI] = new Thread(() => results.Enqueue(task.Result));
+        }
+        foreach (var thread in threads)
+        {
+            thread.Start();
+        }
+        manualResetEvent.Set();
+
+        foreach (var thread in threads)
+        {
+            if (!thread.Join(1000))
+            {
+                Assert.Fail("Deadlock");
+            }
+        }
+        Assert.AreEqual(SIZE, results.Count);
+
+        foreach (var result in results)
+        {
+            Assert.AreEqual(1, result);
+        }
+    }
+
+    [Test]
+    public void AddingAfterAfterShutdownThrowsOperationCanceledExceptionTest()
     {
         var task = threadPool.Enqueue(() => 1);
         threadPool.Shutdown();
-        Assert.Throws<AggregateException>(() => task.ContinueWith(x => x + 10));
-        Assert.Throws<AggregateException>(() => threadPool.Enqueue(() => "qweqe"));
-
+        Assert.Throws<OperationCanceledException>(() => task.ContinueWith(x => x + 10));
+        Assert.Throws<OperationCanceledException>(() => threadPool.Enqueue(() => "qweqe"));
     }
+
+   
 }

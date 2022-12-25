@@ -1,17 +1,19 @@
 namespace ThreadPool.Tests;
 
 using NUnit.Framework;
-using System;
 
+/// <summary>
+/// Class with MyTask tests
+/// </summary>
 public class MyTaskTest
 {
     const int SIZE = 3;
-    private MyThreadPool threadPool;
+    private MyThreadPool threadPool = new(SIZE);
 
     [SetUp]
     public void Setup()
     {
-        threadPool = new MyThreadPool(SIZE);
+        threadPool = new(SIZE);
     }
 
     [Test]

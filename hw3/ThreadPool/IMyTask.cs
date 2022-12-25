@@ -1,28 +1,26 @@
 ﻿namespace ThreadPool;
 
-using System;
-
 /// <summary>
-/// Interface of the Task
+/// Interface of the MyTask
 /// </summary>
 /// <typeparam name="TResult"></typeparam>
-public interface IMyTask <TResult>
+public interface IMyTask<TResult>
 {
     /// <summary>
-    /// Returns if the Task was complited
+    /// Executes the MyTask
     /// </summary>
-    public bool IsCompleted { get; }
+    public void Calculate();
 
     /// <summary>
-    /// Returns the result of the Task execution
+    /// Returns the result of the MyTask execution
     /// </summary>
-    public TResult Result { get; }
+    public TResult? Result { get; }
 
     /// <summary>
     /// Fccepts a function that can be applied to the result of a given function
     /// </summary>
     /// <typeparam name="TNewResult">Type of the result of function</typeparam>
     /// <param name="function">Given function</param>
-    /// <returns>New Task to execute</returns>
+    /// <returns>New MyTask to execute</returns>
     public IMyTask<TNewResult> ContinueWith<TNewResult>(Func<TResult, TNewResult> function);
 }
