@@ -13,12 +13,12 @@ public class Matrix
     /// <summary>
     /// The number of rows in matrix
     /// </summary>
-    public int Rows { get { return matrix.GetLength(0); } }
+    public int Rows => matrix.GetLength(0);
 
     /// <summary>
     /// The number of columns in matrix
     /// </summary>
-    public int Columns { get { return matrix.GetLength(1); } }
+    public int Columns => matrix.GetLength(1);
 
     /// <summary>
     /// The empty matrix constructor
@@ -121,7 +121,7 @@ public class Matrix
     public static Matrix SequentialMultiplication(Matrix leftMatrix, Matrix rightMatrix)
     {
         CheckMultiplicationSize(leftMatrix, rightMatrix);
-        Matrix resultMartix = new Matrix(leftMatrix.Rows, rightMatrix.Columns);
+        Matrix resultMartix = new(leftMatrix.Rows, rightMatrix.Columns);
         for (int row = 0; row < leftMatrix.Rows; row++)
         {
             for (int col = 0; col < rightMatrix.Columns; col++)
@@ -144,7 +144,7 @@ public class Matrix
     public static Matrix ParallelMultiplication(Matrix leftMatrix, Matrix rightMatrix)
     {
         CheckMultiplicationSize(leftMatrix, rightMatrix);
-        Matrix resultMartix = new Matrix(leftMatrix.Rows, rightMatrix.Columns);
+        Matrix resultMartix = new(leftMatrix.Rows, rightMatrix.Columns);
         var threads = leftMatrix.Rows < Environment.ProcessorCount ? new Thread[leftMatrix.Rows] : new Thread[Environment.ProcessorCount];
         for (int i = 0; i < threads.Length; ++i)
         {

@@ -1,14 +1,17 @@
 ﻿namespace MatrixMultiplication;
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+/// <summary>
+/// Class to comparing methods
+/// </summary>
 public static class Comparison
 {
+    /// <summary>
+    /// Compares sequental and parallel multiplying methods 
+    /// </summary>
+    /// <param name="path">Path to file with results of comparation</param>
     public static void Compare(string path)
     {
         var numbeOfRepeating = 10;
@@ -51,7 +54,8 @@ public static class Comparison
             squareDeviationParallel -= mathExpectationParallel * mathExpectationParallel;
             squareDeviationSequental = Math.Sqrt(squareDeviationSequental);
             squareDeviationParallel = Math.Sqrt(squareDeviationParallel);
-            file.Write(i < 1000 ? $"|      {i / 100}      |     {i}x{i}    |" : $"|     {i / 100}    " +
+            file.Write(i < 9000 ? $"|      {i / 100}      |     {i}x{i}    |         {mathExpectationSequental:f5} sec       |          {squareDeviationSequental:f5} sec         |" +
+                $"       {mathExpectationParallel:f5} sec       |         {squareDeviationParallel:f5} sec         |" : $"|     {i / 100}    " +
                 $"  |    {i}x{i}   |        {mathExpectationSequental:f5} sec       |          {squareDeviationSequental:f5} sec         |" +
                 $"       {mathExpectationParallel:f5} sec       |         {squareDeviationParallel:f5} sec         |");
             file.WriteLine();
