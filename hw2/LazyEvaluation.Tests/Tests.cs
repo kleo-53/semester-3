@@ -3,6 +3,9 @@ namespace LazyEvaluation.Tests;
 using NUnit.Framework;
 using System.Threading;
 
+/// <summary>
+/// Class with tests of the ILazy
+/// </summary>
 public class Tests
 {
     [Test]
