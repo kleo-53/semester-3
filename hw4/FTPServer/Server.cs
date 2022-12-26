@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 public class Server
 {
     private int port;
-    private string currentDirectory;
     private TcpListener listener;
-    private readonly CancellationTokenSource cts;
+    private CancellationTokenSource cts = new();
+    private List<Task> listOfRequests = new();
 
     /// <summary>
     /// Creates server running at given port
@@ -21,10 +21,9 @@ public class Server
     /// <param name="port">Given port</param>
     public Server(int port)
     {
-        listener = new TcpListener(IPAddress.Any, port);
+        listener = new(IPAddress.Any, port);
         this.port = port;
-        currentDirectory = Directory.GetCurrentDirectory();
-        cts = new CancellationTokenSource();
+        cts = new();
     }
 
     /// <summary>
@@ -33,82 +32,87 @@ public class Server
     public async void Start()
     {
         listener.Start();
-        Console.WriteLine($"Listen on port {port}...");
+        Console.WriteLine($"Server started on port {port}...");
         while (!cts.IsCancellationRequested)
         {
-            Interact();
+            var socket = await listener.AcceptSocketAsync();
+            listOfRequests.Add(Task.Run(async () =>
+            {
+                var stream = new NetworkStream(socket);
+                var reader = new StreamReader(stream);
+                var data = await reader.ReadLineAsync();
+                var splitData = data?.Split();
+                var writer = new StreamWriter(stream);
+                if (string.Equals(splitData![0], "1"))
+                {
+                    await List(splitData[1], writer);
+                }
+                else if (string.Equals(splitData[0], "2"))
+                {
+                    await Get(splitData[1], writer);
+                }
+                socket.Close();
+            }));
         }
-        cts.Cancel();
+        await Task.WhenAll(listOfRequests);
         listener.Stop();
     }
 
-    private async void Interact()
+    private async Task List(string path, StreamWriter writer)
     {
-        var socket = await listener.AcceptSocketAsync();
-        _ = Task.Run(async () =>
+        if (File.Exists(path))
         {
-            var stream = new NetworkStream(socket);
-            var reader = new StreamReader(stream);
-            var data = await reader.ReadLineAsync();
-            var writer = new StreamWriter(stream);
-            Console.WriteLine($"Received data: {data}");
-            try
-            {
-                var listOfData = data.ToString().Split(' ');
-                var fullPath = Path.GetFullPath(listOfData[1]);
-                if (listOfData[0] == "1")
-                {
-                    if (File.Exists(fullPath))
-                    {
-                        await writer.WriteAsync($"1 {Path.GetRelativePath(currentDirectory, fullPath)} false");
-                        await writer.FlushAsync();
-                    }
-                    else if (Directory.Exists(fullPath))
-                    {
-                        string[] fileEntries = Directory.GetFiles(fullPath);
-                        string[] subdirectoryEntries = Directory.GetDirectories(fullPath);
-
-                        await writer.WriteAsync($"{fileEntries.Length + subdirectoryEntries.Length} ");
-
-                        foreach (string fileName in fileEntries)
-                        {
-                            await writer.WriteAsync($"{Path.GetRelativePath(currentDirectory, fileName)} false ");
-                        }
-
-                        foreach (string subdirectory in subdirectoryEntries)
-                        {
-                            await writer.WriteAsync($"{Path.GetRelativePath(currentDirectory, subdirectory)} true ");
-                        }
-                    }
-                    else
-                    {
-                        await writer.WriteAsync("-1");
-                    }
-                }
-                else if (listOfData[0] == "2")
-                {
-                    if (File.Exists(fullPath))
-                    {
-                        await writer.WriteAsync($"{new FileInfo(fullPath).Length} ");
-                        using (var sr = new StreamReader(fullPath))
-                        {
-                            await writer.WriteAsync(sr.ReadToEnd());
-                        }
-                    }
-                    else
-                    {
-                        await writer.WriteAsync("-1");
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+            await writer.WriteAsync($"1 {Path.GetRelativePath(Directory.GetCurrentDirectory(), path)} false");
             await writer.FlushAsync();
+        }
+        else if (Directory.Exists(path))
+        {
+            string[] fileEntries = Directory.GetFiles(path);
+            string[] subdirectoryEntries = Directory.GetDirectories(path);
 
-            socket.Close();
-        });
+            await writer.WriteAsync($"{fileEntries.Length + subdirectoryEntries.Length} ");
+
+            foreach (string fileName in fileEntries)
+            {
+                await writer.WriteAsync($"{Path.GetRelativePath(Directory.GetCurrentDirectory(), fileName)} false ");
+            }
+
+            foreach (string subdirectory in subdirectoryEntries)
+            {
+                await writer.WriteAsync($"{Path.GetRelativePath(Directory.GetCurrentDirectory(), subdirectory)} true ");
+            }
+        }
+        else
+        {
+            await writer.WriteAsync("-1");
+        }
+        await writer.WriteLineAsync();
+        await writer.FlushAsync();
+    }
+
+    private async Task Get(string path, StreamWriter writer)
+    {
+        if (File.Exists(path))
+        {
+            await writer.WriteAsync($"{new FileInfo(path).Length} ");
+            using (var sr = new StreamReader(path))
+            {
+                await writer.WriteAsync(sr.ReadToEnd());
+            }
+        }
+        else
+        {
+            await writer.WriteAsync("-1");
+        }
+        await writer.WriteLineAsync();
+        await writer.FlushAsync();
+    }
+
+    /// <summary>
+    /// Stops server
+    /// </summary>
+    public void Stop()
+    {
+        cts.Cancel();
     }
 }

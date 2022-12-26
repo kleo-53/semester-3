@@ -5,6 +5,8 @@ using FTPServer;
 using NUnit.Framework;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 
 public class Tests
 {
@@ -19,15 +21,33 @@ public class Tests
     public void Setup()
     {
         port = 8888;
-        pathToFile = Path.GetFullPath("../../../../FTP.Tests/tests/TestRequest.txt");
-        pathToCorrectFile = Path.GetFullPath("../../../../FTP.Tests/CorrectResultOfTest.txt");
-        pathToResultFile = Path.GetFullPath("../../../../FTP.Tests/tests/FTP.Tests.csproj");
+        pathToCorrectFile = Path.GetFullPath("../../../../FTP.Tests/tests/CorrectFile.txt");
+        pathToResultFile = Path.GetFullPath("./Download/TestRequest.txt");
+        pathToFile = "../../../tests/TestRequest.txt";
         server = new Server(port);
-        client = new Client(port, pathToFile, Path.GetFullPath("../../../../FTP.Tests/tests"));
+        server.Start();
+        client = new Client(port, IPAddress.Parse("127.0.0.1"));
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        server.Stop();
     }
 
     [Test]
-    public async void FileDownloadingTest()
+    public async Task FileListingTest()
+    {
+        var result = await client.Start($"1 ../../../../FTP.Tests/tests");
+        Assert.AreEqual(result, "3 ..\\..\\..\\tests\\CorrectFile.txt false ..\\..\\..\\tests\\TestRequest.txt false ..\\..\\..\\tests\\EmptyDirectory true ");
+        result = await client.Start("1 ../../../../FTP.Tests/aboba.txt");
+        Assert.AreEqual(result, "No such file or directory");
+        result = await client.Start("1 ../../../../FTP.Tests/FTP.Tests.csproj");
+        Assert.AreEqual(result, "1 ..\\..\\..\\FTP.Tests.csproj false");
+    }
+
+    [Test]
+    public async Task FileDownloadingTest()
     {
         if (File.Exists(pathToResultFile))
         {
@@ -35,17 +55,12 @@ public class Tests
         }
         try
         {
-            client.Start();
-            server.Start();
+            var result = await client.Start($"2 {pathToFile}");
+            Assert.IsTrue(File.ReadAllBytes(pathToResultFile).SequenceEqual(File.ReadAllBytes(pathToCorrectFile)));
         }
         catch
         {
             Assert.Fail();
-        }
-        finally
-        {
-            Assert.IsTrue(File.Exists(pathToResultFile));
-            Assert.IsTrue(File.ReadAllBytes(pathToCorrectFile).SequenceEqual(File.ReadAllBytes(pathToResultFile)));
         }
     }
 }

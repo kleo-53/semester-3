@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FTPClient\FTPClient.csproj" />
     <ProjectReference Include="..\FTPServer\FTPServer.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,5 @@
+172 1 ../../../../FTP.Tests/tests
+1 ../../../../FTP
+1 ../../../../FTP.Tests/tests/TestRequest.txt
+2 ../../../../FTP.Tests/aboba.txt
+2 ../../../../FTP.Tests/FTP.Tests.csproj
