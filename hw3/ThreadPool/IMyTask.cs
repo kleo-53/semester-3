@@ -17,7 +17,7 @@ public interface IMyTask<TResult>
     public TResult? Result { get; }
 
     /// <summary>
-    /// Fccepts a function that can be applied to the result of a given function
+    /// Accepts a function that can be applied to the result of a given function
     /// </summary>
     /// <typeparam name="TNewResult">Type of the result of function</typeparam>
     /// <param name="function">Given function</param>

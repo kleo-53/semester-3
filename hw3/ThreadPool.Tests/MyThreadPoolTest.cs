@@ -36,7 +36,7 @@ public class MyThreadPoolTest
         for (var i = 0; i < SIZE; ++i)
         {
             var localI = i;
-            threads[localI] = new Thread(() => results.Enqueue(threadPool.Enqueue(() => localI * localI + localI).Result));
+            threads[localI] = new Thread(() => results.Enqueue(threadPool.Submit(() => localI * localI + localI).Result));
         }
         foreach (var thread in threads)
         {
@@ -49,18 +49,18 @@ public class MyThreadPoolTest
                 Assert.Fail("Deadlock");
             }
         }
-        var a = 0;
+        var element = 0;
         foreach (var result in results)
         {
-            Assert.AreEqual(a * a + a, result);
-            a++;
+            Assert.AreEqual(element * element + element, result);
+            element++;
         }
     }
 
     [Test]
     public void ThreadSafetyTest()
     {
-        var task = threadPool.Enqueue(() =>
+        var task = threadPool.Submit(() =>
         {
             manualResetEvent.WaitOne();
             return 1;
@@ -95,10 +95,10 @@ public class MyThreadPoolTest
     [Test]
     public void AddingAfterAfterShutdownThrowsOperationCanceledExceptionTest()
     {
-        var task = threadPool.Enqueue(() => 1);
+        var task = threadPool.Submit(() => 1);
         threadPool.Shutdown();
         Assert.Throws<OperationCanceledException>(() => task.ContinueWith(x => x + 10));
-        Assert.Throws<OperationCanceledException>(() => threadPool.Enqueue(() => "qweqe"));
+        Assert.Throws<OperationCanceledException>(() => threadPool.Submit(() => "qweqe"));
     }
 
    

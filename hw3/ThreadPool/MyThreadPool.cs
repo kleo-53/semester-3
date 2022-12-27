@@ -87,13 +87,13 @@ public class MyThreadPool
                 lock (locker)
                 {
                     IsCompleted = true;
-                }
-                function = null;
-                endOfCalculation.Set();
-                foreach (var continuation in continuationTasks)
-                {
-                    threadPool.Enqueue(continuation);
-                    Interlocked.Decrement(ref threadPool.numberOfContinuationTasks);
+                    function = null;
+                    endOfCalculation.Set();
+                    foreach (var continuation in continuationTasks)
+                    {
+                        threadPool.Enqueue(continuation);
+                        Interlocked.Decrement(ref threadPool.numberOfContinuationTasks);
+                    }
                 }
             }
         }
@@ -106,13 +106,13 @@ public class MyThreadPool
             {
                 if (IsCompleted)
                 {
-                    return threadPool.Enqueue(() => function(result));
+                    return threadPool.Submit(() => function(result!));
                 }
             }
-            lock (threadPool.threadPoolLocker)
+            lock (locker)
             {
                 token.ThrowIfCancellationRequested();
-                var newTask = new MyTask<TNewResult>(() => function(result), threadPool, token);
+                var newTask = new MyTask<TNewResult>(() => function(result!), threadPool, token);
                 continuationTasks.Add(newTask.Calculate);
                 Interlocked.Increment(ref threadPool.numberOfContinuationTasks);
                 return newTask;
@@ -167,12 +167,18 @@ public class MyThreadPool
     /// <typeparam name="TResult">Type of the result of function</typeparam>
     /// <param name="function">Given function</param>
     /// <returns>Added MyTask</returns>
-    public IMyTask<TResult> Enqueue<TResult>(Func<TResult> function)
+    public IMyTask<TResult> Submit<TResult>(Func<TResult> function)
     {
-        token.ThrowIfCancellationRequested();
-        lock (threadPoolLocker)
+        if (numberOfContinuationTasks == 0)
         {
             token.ThrowIfCancellationRequested();
+        }
+        lock (threadPoolLocker)
+        {
+            if (numberOfContinuationTasks == 0)
+            {
+                token.ThrowIfCancellationRequested();
+            }
             var newTask = new MyTask<TResult>(function, this, token);
             queue.Enqueue(newTask.Calculate);
             freeThread.Set();
@@ -184,12 +190,10 @@ public class MyThreadPool
     /// Adds the action to the threads queue
     /// </summary>
     /// <param name="action">Given action</param>
-    public void Enqueue(Action action)
+    private void Enqueue(Action action)
     {
-        token.ThrowIfCancellationRequested();
         lock (threadPoolLocker)
         {
-            token.ThrowIfCancellationRequested();
             queue.Enqueue(action);
             freeThread.Set();
         }

@@ -9,7 +9,7 @@ var myContinuation = (int x) =>
     return x;
 };
 
-var firstTask = threadPool.Enqueue(myFunc);
+var firstTask = threadPool.Submit(myFunc);
 Console.WriteLine(firstTask.Result);
 firstTask.ContinueWith(myContinuation);
 
