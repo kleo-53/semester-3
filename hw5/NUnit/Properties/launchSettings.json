@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NUnitProject": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\\\..\\\\..\\\\..\\\\ExampleProject.Tests"
+    }
+  }
+}
