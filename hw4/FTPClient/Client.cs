@@ -39,7 +39,6 @@ public class Client
             return await List(line);
         }
         return await Get(line);
-        //Console.WriteLine("File is downoloaded");
     }
 
     /// <summary>
@@ -49,23 +48,21 @@ public class Client
     /// <returns>String with list of the files and directories of the given directory</returns>
     public async Task<string> List(string line)
     {
-        using (var client = new TcpClient())
-        {
-            await client.ConnectAsync(iPAddress, port);
-            var stream = client.GetStream();
-            var writer = new StreamWriter(stream);
-            await writer.WriteLineAsync(line);
-            await writer.FlushAsync();
+        using var client = new TcpClient();
+        await client.ConnectAsync(iPAddress, port);
+        using var stream = client.GetStream();
+        using var writer = new StreamWriter(stream);
+        await writer.WriteLineAsync(line);
+        await writer.FlushAsync();
 
-            var reader = new StreamReader(stream);
-            var data = await reader.ReadLineAsync();
-            var splitData = data!.Split();
-            if (string.Equals(data, "-1"))
-            {
-                return "No such file or directory";
-            }
-            return data!;
+        using var reader = new StreamReader(stream);
+        var data = await reader.ReadLineAsync();
+        var splitData = data!.Split();
+        if (string.Equals(splitData[0], "-1"))
+        {
+            return "No such file or directory";
         }
+        return data!;
     }
 
     /// <summary>
@@ -75,30 +72,28 @@ public class Client
     /// <returns>The size and content of the file (in bytes)</returns>
     public async Task<string> Get(string line)
     {
-        using (var client = new TcpClient())
+        using var client = new TcpClient();
+        await client.ConnectAsync(iPAddress, port);
+        using var stream = client.GetStream();
+        using var writer = new StreamWriter(stream);
+        await writer.WriteLineAsync(line);
+        await writer.FlushAsync();
+
+        var reader = new StreamReader(stream);
+        var data = await reader.ReadToEndAsync();
+        var splitData = data!.Split();
+        if (string.Equals(splitData[0], "-1"))
         {
-            await client.ConnectAsync(iPAddress, port);
-            var stream = client.GetStream();
-            var writer = new StreamWriter(stream);
-            await writer.WriteLineAsync(line);
-            await writer.FlushAsync();
-
-            var reader = new StreamReader(stream);
-            var data = await reader.ReadToEndAsync();
-            var splitData = data!.Split();
-            if (string.Equals(data, "-1"))
-            {
-                return "Such file doesn't exist";
-            }
-
-            var resultPath = pathToResultDirectory + line.Split()[1].Split('/', '\\').Last();
-            if (!Directory.Exists(pathToResultDirectory))
-            {
-                Directory.CreateDirectory(pathToResultDirectory);
-            }
-            var info = new UTF8Encoding(true).GetBytes(data);
-            await File.WriteAllBytesAsync(resultPath, info);
-            return data;
+            return "Such file doesn't exist";
         }
+
+        var resultPath = pathToResultDirectory + line.Split()[1].Split('/', '\\').Last();
+        if (!Directory.Exists(pathToResultDirectory))
+        {
+            Directory.CreateDirectory(pathToResultDirectory);
+        }
+        var info = new UTF8Encoding(true).GetBytes(data);
+        await File.WriteAllBytesAsync(resultPath, info);
+        return data;
     }
 }
