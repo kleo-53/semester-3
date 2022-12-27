@@ -15,12 +15,12 @@ public class LazyThreads<T> : ILazy<T>
     /// <summary>
     /// Givan function
     /// </summary>
-    private Func<T?> supplier;
+    private Func<T?>? supplier;
 
     /// <summary>
     /// Checker of calculation
     /// </summary>
-    private bool wasCalculated = false;
+    private volatile bool wasCalculated = false;
 
     /// <summary>
     /// Constructor of class
@@ -45,7 +45,15 @@ public class LazyThreads<T> : ILazy<T>
             {
                 return result;
             }
-            result = supplier();
+            if (supplier != null)
+            {
+                result = supplier();
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+            supplier = null;
             wasCalculated = true;
             return result;
         }
