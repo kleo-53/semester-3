@@ -20,7 +20,7 @@ public class Lazy<T> : ILazy<T>
     /// <summary>
     /// Checker of calculation
     /// </summary>
-    private volatile bool wasCalculated = false;
+    private bool wasCalculated = false;
 
     /// <summary>
     /// Constructor of class
