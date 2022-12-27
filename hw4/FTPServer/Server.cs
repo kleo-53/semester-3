@@ -29,29 +29,32 @@ public class Server
     /// <summary>
     /// Starts server and interacts with client
     /// </summary>
-    public async void Start()
+    public async Task Start()
     {
         listener.Start();
         Console.WriteLine($"Server started on port {port}...");
         while (!cts.IsCancellationRequested)
         {
-            var socket = await listener.AcceptSocketAsync();
+            var socket = await listener.AcceptSocketAsync(cts.Token);
             listOfRequests.Add(Task.Run(async () =>
             {
-                var stream = new NetworkStream(socket);
-                var reader = new StreamReader(stream);
-                var data = await reader.ReadLineAsync();
-                var splitData = data?.Split();
-                var writer = new StreamWriter(stream);
-                if (string.Equals(splitData![0], "1"))
+                using (socket)
                 {
-                    await List(splitData[1], writer);
+                    var stream = new NetworkStream(socket);
+                    var reader = new StreamReader(stream);
+                    var data = await reader.ReadLineAsync();
+                    var splitData = data?.Split();
+                    var writer = new StreamWriter(stream);
+                    if (string.Equals(splitData![0], "1"))
+                    {
+                        await List(splitData[1], writer);
+                    }
+                    else if (string.Equals(splitData[0], "2"))
+                    {
+                        await Get(splitData[1], writer);
+                    }
+                    socket.Close();
                 }
-                else if (string.Equals(splitData[0], "2"))
-                {
-                    await Get(splitData[1], writer);
-                }
-                socket.Close();
             }));
         }
         await Task.WhenAll(listOfRequests);
@@ -111,8 +114,5 @@ public class Server
     /// <summary>
     /// Stops server
     /// </summary>
-    public void Stop()
-    {
-        cts.Cancel();
-    }
+    public void Stop() => cts.Cancel();
 }

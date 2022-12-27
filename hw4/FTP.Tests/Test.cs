@@ -10,29 +10,28 @@ using System.Threading.Tasks;
 
 public class Tests
 {
-    private Server server;
-    private Client client;
+    private Server server = new(8888);
+    private Client client = new(8888, IPAddress.Parse("127.0.0.1"));
     private int port;
-    private string pathToFile;
-    private string pathToCorrectFile;
-    private string pathToResultFile;
+    private string pathToFile = "../../../tests/TestRequest.txt";
+    private string pathToCorrectFile = Path.GetFullPath("../../../../FTP.Tests/tests/CorrectFile.txt");
+    private string pathToResultFile = Path.GetFullPath("./Download/TestRequest.txt");
+    private Task serverTask = new(() => { });
 
     [SetUp]
     public void Setup()
     {
         port = 8888;
-        pathToCorrectFile = Path.GetFullPath("../../../../FTP.Tests/tests/CorrectFile.txt");
-        pathToResultFile = Path.GetFullPath("./Download/TestRequest.txt");
-        pathToFile = "../../../tests/TestRequest.txt";
         server = new Server(port);
-        server.Start();
+        serverTask = server.Start();
         client = new Client(port, IPAddress.Parse("127.0.0.1"));
     }
 
     [TearDown]
-    public void TearDown()
+    public async void TearDown()
     {
         server.Stop();
+        await serverTask;
     }
 
     [Test]
@@ -53,14 +52,7 @@ public class Tests
         {
             File.Delete(pathToResultFile);
         }
-        try
-        {
-            var result = await client.Start($"2 {pathToFile}");
-            Assert.IsTrue(File.ReadAllBytes(pathToResultFile).SequenceEqual(File.ReadAllBytes(pathToCorrectFile)));
-        }
-        catch
-        {
-            Assert.Fail();
-        }
+        var result = await client.Start($"2 {pathToFile}");
+        Assert.IsTrue(File.ReadAllBytes(pathToResultFile).SequenceEqual(File.ReadAllBytes(pathToCorrectFile)));
     }
 }
