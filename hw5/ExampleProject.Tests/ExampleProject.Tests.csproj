@@ -15,10 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ExampleProject\ExampleProject.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="NUnitProject">
       <HintPath>..\NUnit\bin\Debug\net6.0\NUnitProject.dll</HintPath>
     </Reference>

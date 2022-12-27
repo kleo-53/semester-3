@@ -5,6 +5,7 @@ using System;
 /// <summary>
 /// Attributes to the test methods
 /// </summary>
+[AttributeUsage(AttributeTargets.Method)]
 public class TestAttribute : Attribute
 {
     /// <summary>

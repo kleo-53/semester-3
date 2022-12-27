@@ -12,17 +12,17 @@ using System.Threading.Tasks;
 /// <summary>
 /// Class of testing methods
 /// </summary>
-public static class MyNUnit
+public class MyNUnit
 {
-    private static ConcurrentDictionary<Type, ClassMethods> methodsToTest = new();
-    private static ConcurrentDictionary<Type, ConcurrentBag<TestInfo>> testResults = new();
+    private ConcurrentDictionary<Type, ClassMethods> methodsToTest = new();
+    private ConcurrentDictionary<Type, ConcurrentBag<TestInfo>> testResults = new();
 
     /// <summary>
     /// Gets all assemblies and loads classes
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    private static IEnumerable<Type> GetAllClasses(string path)
+    private IEnumerable<Type> GetAllClasses(string path)
     {
         var assemblies = Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories).ToList();
         assemblies.RemoveAll(assemblyPath => assemblyPath.Contains("\\NUnitProject.dll"));
@@ -45,7 +45,7 @@ public static class MyNUnit
     /// Runs the tests
     /// </summary>
     /// <param name="path">Path to assemblies</param>
-    public static void RunTests(string path)
+    public void RunTests(string path)
     {
         var classes = GetAllClasses(path);
         Parallel.ForEach(classes, type =>
@@ -74,7 +74,7 @@ public static class MyNUnit
     /// <summary>
     /// Runs all tests from their classes
     /// </summary>
-    private static void ExecuteTestMethod(Type type, MethodInfo method)
+    private void ExecuteTestMethod(Type type, MethodInfo method)
     {
         var attribute = method.GetCustomAttribute<TestAttribute>();
         var isSuccessful = false;
@@ -85,7 +85,7 @@ public static class MyNUnit
         {
             throw new FormatException($"{type.Name} must have parameterless constructor");
         }
-        if (attribute.IsIgnored)
+        if (attribute!.IsIgnored)
         {
             testResults[type].Add(new TestInfo(method.Name, attribute.IgnoreMessage));
             return;
@@ -106,24 +106,22 @@ public static class MyNUnit
             if (attribute.ExpectedException == null)
             {
                 isSuccessful = true;
-                stopwatch.Stop();
             }
         }
         catch (Exception ex)
         {
-            thrownException = ex.InnerException.GetType();
+            thrownException = ex.InnerException!.GetType();
 
             if (thrownException == attribute.ExpectedException)
             {
                 isSuccessful = true;
-                stopwatch.Stop();
             }
         }
         finally
         {
             stopwatch.Stop();
             var ellapsedTime = stopwatch.Elapsed;
-            testResults[type].Add(new TestInfo(method.Name, isSuccessful, attribute.ExpectedException, thrownException, ellapsedTime));
+            testResults[type].Add(new TestInfo(method.Name, isSuccessful, attribute.ExpectedException!, thrownException!, ellapsedTime));
         }
 
         foreach (var afterTestMethod in methodsToTest[type].AfterTestMethods)
@@ -136,7 +134,7 @@ public static class MyNUnit
     /// Writes the results of testing into dictionary
     /// </summary>
     /// <returns>Results of testing</returns>
-    public static Dictionary<Type, List<TestInfo>> ResultsOfTesting()
+    public Dictionary<Type, List<TestInfo>> ResultsOfTesting()
     {
         var result = new Dictionary<Type, List<TestInfo>>();
 
@@ -154,7 +152,7 @@ public static class MyNUnit
     /// <summary>
     /// Prints the results of testing into console
     /// </summary>
-    public static void PrintResults()
+    public void PrintResults()
     {
         Console.WriteLine("----Results of testing----");
         foreach (var type in testResults.Keys)
