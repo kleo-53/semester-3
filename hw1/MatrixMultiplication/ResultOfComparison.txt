@@ -1,0 +1,12 @@
+Testing of multiplying methods. Each test is executed 10 times.
+| Test number | Size of matrix | Average time (sequental) | Square deviation (sequental) | Average time (parallel) | Square deviation (parallel) |
+|      1      |     100x100    |         0,02859 sec       |          0,00556 sec         |       0,21691 sec       |         0,14356 sec         |
+|      2      |     200x200    |         0,17715 sec       |          0,05091 sec         |       0,14634 sec       |         0,01990 sec         |
+|      3      |     300x300    |         0,47310 sec       |          0,02838 sec         |       0,25174 sec       |         0,03280 sec         |
+|      4      |     400x400    |         1,12730 sec       |          0,05620 sec         |       0,42301 sec       |         0,01336 sec         |
+|      5      |     500x500    |         2,10003 sec       |          0,04503 sec         |       0,73152 sec       |         0,00976 sec         |
+|      6      |     600x600    |         3,66078 sec       |          0,08456 sec         |       1,38114 sec       |         0,17898 sec         |
+|      7      |     700x700    |         6,40326 sec       |          0,09495 sec         |       2,89702 sec       |         0,07346 sec         |
+|      8      |     800x800    |         9,60390 sec       |          0,45217 sec         |       4,23501 sec       |         0,08931 sec         |
+|      9      |     900x900    |        13,89936 sec       |          0,19077 sec         |       6,06353 sec       |         0,08242 sec         |
+|     10      |    1000x1000   |        19,54479 sec       |          0,45103 sec         |       8,48483 sec       |         0,30036 sec         |
